@@ -1,0 +1,24 @@
+R Script
+
+library(readxl)
+library(tidyverse)
+
+MRLabData <-read_excel() # locate dataset from device
+
+PriceLinearMod <- lm(MRLabData$PRICE ~ MRLabData$BATHS + MRLabData$BEDS + MRLabData$`SQUARE FEET` + MRLabData$`LOT SIZE` + as.factor(MRLabData$`YEAR BUILT`) + as.factor(MRLabData$`ZIP OR POSTAL CODE`) , data=MRLabData)  
+summary(PriceLinearMod)
+
+For Tableau Calculated Field
+
+SCRIPT_REAL(
+
+"PriceLinearMod <- lm(.arg1 ~ .arg2 + .arg3 + .arg4 + .arg5 + .arg6 + .arg7)
+
+PriceLinearMod$fitted",
+
+sum([Price]), sum([Baths]), sum([Beds]), sum([Square Feet]), sum([Lot Size]), ATTR([Year Built]), ATTR([Zip Or Postal Code])
+)
+
+
+
+

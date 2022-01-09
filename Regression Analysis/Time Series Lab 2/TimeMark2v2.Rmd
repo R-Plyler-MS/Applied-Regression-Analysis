@@ -1,0 +1,246 @@
+---
+title: "Time Series Lab 2"
+author: "Margo Bergman"
+date: "11/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("C:/Users/randa/Dropbox/Masters/Autumn/TBANLT 540 Applied Regression Analysis/Time Series Lab 2"))
+```
+
+
+Library Packages
+
+```{r library}
+
+library(tidyverse)
+library(readxl)
+library(corrgram)
+library(tseries)
+library(forecast)
+```
+
+
+```{r }
+RainSanDiegoAll <- read_csv("2794315.csv")
+
+```
+
+```{r data structure}
+dim(RainSanDiegoAll)    #returns the dimensions of an object
+str(RainSanDiegoAll)
+sum(is.na(RainSanDiegoAll)) #returns how many observations have "na"
+mae<-function(error) {mean(abs(error))}
+
+```
+
+
+```{r}
+
+view(RainSanDiegoAll)
+#RainSanDiegoAll$PRCP <- as.character(as.logical(RainSanDiegoAll$PRCP))
+#RainSanDiegoAll$DATE <- as.character(as.logical(RainSanDiegoAll$DATE))
+#RainSanDiegoAll$ACMH <- as.character(as.logical(RainSanDiegoAll$ACMH))
+#RainSanDiegoAll$ACSH <- as.character(as.logical(RainSanDiegoAll$ACSH))
+#RainSanDiegoAll$WDFG <- as.character(as.logical(RainSanDiegoAll$WDFG))
+#RainSanDiegoAll$WDFM <- as.character(as.logical(RainSanDiegoAll$WDFM))
+#RainSanDiegoAll$WSF1 <- as.character(as.logical(RainSanDiegoAll$WSF1))
+#RainSanDiegoAll$WSFG <- as.character(as.logical(RainSanDiegoAll$WSFG))
+#RainSanDiegoAll$WSFM <- as.character(as.logical(RainSanDiegoAll$WSFM))
+#RainSanDiegoAll$WT07 <- as.character(as.logical(RainSanDiegoAll$WT07))
+#RainSanDiegoAll$WT09 <- as.character(as.logical(RainSanDiegoAll$WT09))
+#RainSanDiegoAll$WT11 <- as.character(as.logical(RainSanDiegoAll$WT11))
+#RainSanDiegoAll$WT15 <- as.character(as.logical(RainSanDiegoAll$WT15))
+#RainSanDiegoAll$WV01 <- as.character(as.logical(RainSanDiegoAll$WV01))
+#RainSanDiegoAll$WV20 <- as.character(as.logical(RainSanDiegoAll$WV20))
+
+
+#RainSanDiegoAll$SNOW [is.na(RainSanDiegoAll$SNOW )] <- '0' 
+#RainSanDiegoAll$ACMH [is.na(RainSanDiegoAll$ACMH )] <- '0' 
+#RainSanDiegoAll$ACSH [is.na(RainSanDiegoAll$ACSH )] <- '0' 
+#RainSanDiegoAll$WDFG [is.na(RainSanDiegoAll$WDFG )] <- '0' 
+#RainSanDiegoAll$WDFM [is.na(RainSanDiegoAll$WDFM )] <- '0' 
+#RainSanDiegoAll$WSF1 [is.na(RainSanDiegoAll$WSF1 )] <- '0' 
+#RainSanDiegoAll$WSFG [is.na(RainSanDiegoAll$WSFG )] <- '0' 
+#RainSanDiegoAll$WSFM [is.na(RainSanDiegoAll$WSFM )] <- '0' 
+#RainSanDiegoAll$WT07 [is.na(RainSanDiegoAll$WT07 )] <- '0' 
+#RainSanDiegoAll$WT09 [is.na(RainSanDiegoAll$WT09 )] <- '0' 
+#RainSanDiegoAll$WT11 [is.na(RainSanDiegoAll$WT11 )] <- '0' 
+#RainSanDiegoAll$WT15 [is.na(RainSanDiegoAll$WT15 )] <- '0' 
+#RainSanDiegoAll$WV01 [is.na(RainSanDiegoAll$WV01 )] <- '0' 
+#RainSanDiegoAll$WV20 [is.na(RainSanDiegoAll$WV20 )] <- '0' 
+
+
+
+#sum(is.na(RainSanDiegoAll))
+
+#RainSanDiegoAll[is.na(RainSanDiegoAll)] <- 0 #replaces "na" with 0. This is a choice, statistically, but you can't run the regression without it
+
+#sum(is.na(RainSanDiegoAll))
+
+
+```
+
+Create a time series dataset for decomposition #1 #2
+
+```{r time_series_creation}
+
+RainSanDiegoAll$DATE<-as.Date(RainSanDiegoAll$DATE, format="%m/%d/%Y")
+RainSanDiegoAll$PRCP<-as.numeric(RainSanDiegoAll$PRCP)
+view(RainSanDiegoAll)
+MonthlyRain<-aggregate(list(rain = RainSeattleAll$PRCP), 
+          list(month = cut(RainSanDiegoAll$DATE, "month")), 
+          mean)
+MonthlyRain
+View(MothlyRain)
+MonthlyRain2<-ts(RainSanDiegoAll$PRCP, frequency = 12, start = c(1940,1))
+Rain<-ts(RainSanDiegoAll$PRCP, frequency = 365, start = c(1940,1))
+adf.test(Rain)
+adf.test(MonthlyRain2)
+
+```
+
+
+Create a plot of the time series
+
+
+```{r plots}
+plot.ts(Rain)
+plot.ts(MonthlyRain2)
+
+```
+
+
+Identify the trend/season/random components #3
+
+```{r decomposition}
+RainParts<-decompose(Rain)
+RainMonthParts<-decompose(MonthlyRain2)
+plot(RainParts)
+plot(RainMonthParts)
+```
+
+Modeling using exponential smoothing - Full data #4
+
+```{r HoltWintersFull}
+RainModel1<-HoltWinters(Rain)
+RainModel1
+RainModel1$SSE
+plot(RainModel1, col=4, col.predicted=6)
+residualsHolt1<-residuals(RainModel1)
+plot(residualsHolt1)
+acf(residualsHolt1)
+pacf(residualsHolt1)
+mae(residualsHolt1)
+```
+
+Modeling using exponential smoothing - Monthly data #5
+
+```{r HoltWintersMonthly}
+RainModel2<-HoltWinters(MonthlyRain2)
+RainModel2
+RainModel2$SSE
+plot(RainModel2, col=4, col.predicted=6)
+residualsHolt2<-residuals(RainModel2)
+plot(residualsHolt2)
+acf(residualsHolt2)
+pacf(residualsHolt2)
+
+```
+
+
+Forecasting using exponential smoothing - Full Data
+
+```{r HWForecastFull}
+RainForecast<-forecast(Rain, h=400)
+plot(RainForecast)
+```
+
+Forecasting using exponential smoothing - Monthly Data
+
+```{r HWForecastFull}
+RainForecast2<-forecast(MonthlyRain2, h=100)
+plot(RainForecast2)
+```
+
+Modeling using an auto.arima model - Full Data #6
+
+```{r AutoArimaFull}
+par(mfrow=c(1,2))
+acf(Rain)
+pacf(Rain)
+
+
+RainArima<-auto.arima(Rain, seasonal = TRUE)
+RainArima
+acf(ts(RainArima$residuals), main='ACF Residual - Full')
+pacf(ts(RainArima$residuals), main='PACF Residual - Full')
+
+```
+
+
+Modeling using an auto.arima model - Monthly Data #7
+
+```{r AutoArimaMonthly}
+acf(MonthlyRain2)
+pacf(MonthlyRain2)
+
+RainArima2<-auto.arima(MonthlyRain2, seasonal = TRUE)
+RainArima2
+
+acf(ts(RainArima2$residuals), main='ACF Residual - Monthly')
+pacf(ts(RainArima2$residuals), main='PACF Residual- Monthly')
+
+```
+
+
+```{r predictions}
+RainArima3<-Arima(MonthlyRain2, order = c(5, 1, 0), seasonal = c(5, 0, 0),
+                       include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+                       method = "ML")
+
+RainArima3
+
+RainArima4<-Arima(MonthlyRain2, order = c(5, 1, 0), seasonal = c(4, 0, 0),
+                  include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+                  method = "ML")
+RainArima4
+
+
+
+prediction1=predict(RainArima,n.ahead=100)
+prediction1
+plot(forecast(RainArima,h=500))
+
+prediction2=predict(RainArima2,n.ahead=10)
+prediction2
+plot(forecast(RainArima2,h=100))
+
+prediction3=forecast(RainArima3)
+prediction3
+plot(forecast(RainArima3,h=100))
+
+prediction4=forecast(RainArima4)
+prediction4
+plot(forecast(RainArima4,h=10))
+
+
+```
+
+
+```{r predictions}
+
+mae(residualsHolt1)
+mae(residualsHolt2)
+mae(RainForecast$residuals)
+mae(RainForecast2$residuals)
+mae(RainArima$residuals)
+mae(RainArima2$residuals)
+mae(RainArima3$residuals)
+mae(RainArima4$residuals)
+
+```
+
+

@@ -1,0 +1,204 @@
+---
+title: "LogisticLab"
+author: "Randall Plyler"
+date: "11/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("C:/Users/randa/Dropbox/Masters/Autumn/TBANLT 540 Applied Regression Analysis/Logistic Regression Lab"))
+```
+
+Library Packages
+
+```{r library}
+
+
+library(readxl)
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(car)
+library(zoo)
+```
+
+Load Data
+
+```{r Data}
+RainSanDiegoAll <- read_csv("2773728.csv")
+```
+
+```{r ExploreDataStructure}
+
+dim(RainSanDiegoAll)    #returns the dimensions of an object
+str(RainSanDiegoAll)    #returns the structure of an object
+sum(is.na(RainSanDiegoAll)) #returns how many observations have "na"
+
+RainSanDiegoAll$WT01 <- as.character(as.logical(RainSanDiegoAll$WT01))
+RainSanDiegoAll$WT02 <- as.character(as.logical(RainSanDiegoAll$WT02))
+RainSanDiegoAll$WT03 <- as.character(as.logical(RainSanDiegoAll$WT03))
+RainSanDiegoAll$WT08 <- as.character(as.logical(RainSanDiegoAll$WT08))
+RainSanDiegoAll$WT10 <- as.character(as.logical(RainSanDiegoAll$WT10))
+
+RainSanDiegoAll$WT01 [is.na(RainSanDiegoAll$WT01 )] <- '0' 
+RainSanDiegoAll$WT02 [is.na(RainSanDiegoAll$WT02 )] <- '0' 
+RainSanDiegoAll$WT03 [is.na(RainSanDiegoAll$WT03 )] <- '0' 
+RainSanDiegoAll$WT08 [is.na(RainSanDiegoAll$WT08 )] <- '0'
+RainSanDiegoAll$WT10 [is.na(RainSanDiegoAll$WT10 )] <- '0' 
+
+
+
+sum(is.na(RainSanDiegoAll))
+
+RainSanDiegoAll[is.na(RainSanDiegoAll)] <- 0 #replaces "na" with 0. This is a choice, statistically, but you can't run the regression without it
+
+sum(is.na(RainSanDiegoAll))
+
+View(RainSanDiegoAll)
+
+```
+
+Select variables
+
+```{r selectVariables}
+RainLogData <- select (RainSanDiegoAll,c(DATE,PRCP,TAVG, TMAX, TMIN, WSF5, WDF5, AWND, WT01, WT02, WT03, WT08, WT10))
+
+```
+
+
+Create Season Variable
+
+```{r CreateSeason}
+
+year_end_quarter <- as.yearqtr(as.yearmon(RainLogData$DATE, "%Y/%m/%d") + 1/12)
+
+RainLogData$Season <- factor(format(year_end_quarter, "%q"), levels = 1:4, 
+                    labels = c("winter", "spring", "summer", "fall"))
+
+
+```
+
+
+Create a Wind Direction factor variable
+
+
+```{r WindDirection}
+RainLogData$NewWindDir<-RainLogData$WDF5-23
+View(RainLogData)
+
+RainLogData$WindCat<-cut(RainLogData$NewWindDir, c(-22,22,67,112,157,202,247,292,337))
+
+View(RainLogData)
+
+RainLogData$NewWindCat<-revalue(RainLogData$WindCat, c("(-22,22]"="N","(22,67]"="NE","(67,112]"="E","(112,157]"="SE","(157,202]"="S","(202,247]"="SW","(247,292]"="W","(292,337]"="NW" ))
+
+#SanDiegoWeather <- cut(RainLogData$NewWindDir, breaks=c(-Inf, 11.25, 33.75, 56.25, 78.75, 101.25, 123.75, 146.25, 168.75, 191.25, 213.75, 236.25, 258.75, 281.25, 303.75, 326.25, 348.75, Inf), labels = c("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"), right=FALSE)
+
+#RainLogData$WindDirCat<- data
+                       
+#View(RainLogData)
+
+
+
+```
+
+Create Factor variable indicating presence of Rain
+
+```{r Factor variable for Rain}
+
+RainLogData$RainFac <- ifelse(RainLogData$PRCP > 0, 1, 0)
+rain<-factor(RainLogData$RainFac)
+View(RainLogData)
+
+```
+
+
+Create sequential logit models
+
+```{r Logits}
+
+
+RandyLogData1<-glm(rain~RainLogData$AWND, data=RainLogData, family=binomial)
+summary(RandyLogData1)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData1), confint(RandyLogData1)))
+
+RandyLogData2<-glm(rain~RainLogData$AWND + RainLogData$TAVG, data=RainLogData, family=binomial)
+summary(RandyLogData2)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData2), confint(RandyLogData2)))
+
+RandyLogData3<-glm(rain~RainLogData$AWND + RainLogData$TMAX, data=RainLogData, family=binomial)
+summary(RandyLogData3)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData3), confint(RandyLogData3)))
+
+RandyLogData4<-glm(rain~RainLogData$AWND + RainLogData$TMAX + RainLogData$TMIN, data=RainLogData, family=binomial)
+summary(RandyLogData4)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData4), confint(RandyLogData4)))
+
+RandyLogData5<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5, data=RainLogData, family=binomial)
+summary(RandyLogData5)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData5), confint(RandyLogData5)))
+
+RandyLogData6<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5, data=RainLogData, family=binomial)
+summary(RandyLogData6)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData6), confint(RandyLogData6)))
+
+RandyLogData7<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$Season, data=RainLogData, family=binomial)
+summary(RandyLogData7)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData7), confint(RandyLogData7)))
+
+RandyLogData8<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$WT01, data=RainLogData, family=binomial)
+summary(RandyLogData7)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData8), confint(RandyLogData8)))
+
+RandyLogData9<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5, data=RainLogData, family=binomial)
+summary(RandyLogData7)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData8), confint(RandyLogData8)))
+
+RandyLogData12<-glm(rain~RainLogData$AWND + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$WT01, data=RainLogData, family=binomial)
+summary(RandyLogData12)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData12), confint(RandyLogData12)))
+
+RandyLogData13<-glm(rain~RainLogData$AWND + RainLogData$TAVG + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01 + RainLogData$WT02, data=RainLogData, family=binomial)
+summary(RandyLogData13)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData13), confint(RandyLogData13)))
+
+RandyLogData14<-glm(rain~RainLogData$AWND + RainLogData$TAVG + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01 + RainLogData$WT02 + RainLogData$WT03, data=RainLogData, family=binomial)
+summary(RandyLogData14)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData14), confint(RandyLogData14)))
+
+RandyLogData15<-glm(rain~RainLogData$AWND + RainLogData$TAVG + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01 + RainLogData$WT02 + RainLogData$WT03 + RainLogData$WT08, data=RainLogData, family=binomial)
+summary(RandyLogData15)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData15), confint(RandyLogData15)))
+
+RandyLogData16<-glm(rain~RainLogData$AWND + RainLogData$TAVG + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WDF5 + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01 + RainLogData$WT02 + RainLogData$WT03 + RainLogData$WT08 + RainLogData$WT10, data=RainLogData, family=binomial)
+summary(RandyLogData16)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData16), confint(RandyLogData16)))
+
+RandyLogData10<-glm(rain~RainLogData$AWND + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01+ RainLogData$WT02, data=RainLogData, family=binomial)
+RandyLogData10
+summary(RandyLogData10)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData10), confint(RandyLogData10)))
+
+RandyLogData11<-glm(rain~RainLogData$AWND + RainLogData$TMAX + RainLogData$TMIN + RainLogData$WSF5 + RainLogData$Season + RainLogData$WT01 + RainLogData$WT02 + RainLogData$WT03, data=RainLogData, family=binomial)
+RandyLogData11
+summary(RandyLogData11)
+exp(cbind(Odds_Ratio_RainVNoRain=coef(RandyLogData11), confint(RandyLogData11)))
+
+
+
+```
+
+Residual plots
+
+```{r residuals}
+rain.res<-residuals.glm(RandyLogData1)
+ggplot(data=RainLogData, aes(x=RainLogData$TAVG, y=rain.res))+geom_point()
+ggplot(data=RainLogData, aes(x=RainLogData$TMAX, y=rain.res))+geom_point()
+ggplot(data=RainLogData, aes(x=RainLogData$TMIN, y=rain.res))+geom_point()
+ggplot(data=RainLogData, aes(x=RainLogData$WSF5, y=rain.res))+geom_point()
+ggplot(data=RainLogData, aes(x=RainLogData$WDF5, y=rain.res))+geom_point()
+ggplot(data=RainLogData, aes(x=RainLogData$Season, y=rain.res))+geom_point()
+
+```
+

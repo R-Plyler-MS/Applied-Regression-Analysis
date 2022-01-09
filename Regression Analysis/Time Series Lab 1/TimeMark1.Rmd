@@ -1,0 +1,275 @@
+---
+title: "Time Series Lab 1"
+author: "Margo Bergman"
+date: "11/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("C:/Users/randa/Dropbox/Masters/Autumn/TBANLT 540 Applied Regression Analysis/Time Series Lab 1"))
+```
+
+Library Packages
+
+```{r Library}
+
+
+library(tidyverse)
+library(readxl)
+library(corrgram)
+library(tseries)
+library(urca)
+library(forecast)
+library(trend)
+library(zoo)
+library(reshape)
+library(plyr)
+```
+
+
+Read Data
+
+```{r Data}
+Unemployment<-read_excel("MacroData2021.xlsx",sheet="Population")
+Inflation<-read_excel("MacroData2021.xlsx",sheet="Consumption")
+GDP<-read_excel("MacroData2021.xlsx",sheet="GDP")
+
+View(Unemployment)
+```
+
+
+
+Select variables from the larger dataset
+
+```{r Subset}
+
+UnitedKingdomUn<-Unemployment[484,c('1960','1961','1962','1963','1964','1965','1966','1967','1968','1969','1970','1971','1972','1973','1974','1975','1976','1977','1978','1979','1980','1981','1982','1983','1984','1985','1986','1987','1988','1989','1990','1991','1992','1993','1994','1995','1996','1997','1998','1999','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019', '2020', '2021','2022')]
+
+UnitedKingdomInf<-Inflation[1079,c('1960','1961','1962','1963','1964','1965','1966','1967','1968','1969','1970','1971','1972','1973','1974','1975','1976','1977','1978','1979','1980','1981','1982','1983','1984','1985','1986','1987','1988','1989','1990','1991','1992','1993','1994','1995','1996','1997','1998','1999','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019', '2020', '2021','2022')]
+
+UnitedKingdomGDP<-GDP[584,c('1960','1961','1962','1963','1964','1965','1966','1967','1968','1969','1970','1971','1972','1973','1974','1975','1976','1977','1978','1979','1980','1981','1982','1983','1984','1985','1986','1987','1988','1989','1990','1991','1992','1993','1994','1995','1996','1997','1998','1999','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019', '2020', '2021','2022')]
+
+
+View(UnitedKingdomUn)
+View(UnitedKingdomInf)
+View(UnitedKingdomGDP)
+
+
+```
+
+
+Transpose the columns to observations
+
+```{r Transpose_Data}
+t_UnitedKingdomGDP<-t(UnitedKingdomGDP)
+t_UnitedKingdomGDP<-as.numeric(t_UnitedKingdomGDP)
+
+View(t_UnitedKingdomGDP)
+
+t_UnitedKingdomInf<-t(UnitedKingdomInf)
+t_UnitedKingdomInf<-as.numeric(t_UnitedKingdomInf)
+
+View(t_UnitedKingdomInf)
+
+
+t_UnitedKingdomUnem<-t(UnitedKingdomUn)
+t_UnitedKingdomUnem<-as.numeric(t_UnitedKingdomUnem)
+
+View(t_UnitedKingdomUnem)
+
+
+
+TimeSeriesUnitedKingdom<-cbind(t_UnitedKingdomGDP, t_UnitedKingdomInf, t_UnitedKingdomUnem)
+View(TimeSeriesUnitedKingdom)
+
+TimeSeriesUnitedKingdom<-as.data.frame(TimeSeriesUnitedKingdom)
+
+
+View(TimeSeriesUnitedKingdom)
+
+
+```
+
+Rename Variables
+
+```{r Rename_Data}
+
+
+TimeSeriesUnitedKingdom <- rename(TimeSeriesUnitedKingdom, c(t_UnitedKingdomGDP="GDP_2015"))
+
+TimeSeriesUnitedKingdom <- rename(TimeSeriesUnitedKingdom, c(t_UnitedKingdomInf="CPI_2015"))
+
+TimeSeriesUnitedKingdom <- rename(TimeSeriesUnitedKingdom, c(t_UnitedKingdomUnem="Unemployment"))
+
+View(TimeSeriesUnitedKingdom)
+
+
+
+```
+
+Tell R this is time series data
+
+```{r Make_TimeSeries}
+tsUR<-ts(TimeSeriesUnitedKingdom$Unemployment, start=c(1960,1), freq=1)
+tsIF<-ts(TimeSeriesUnitedKingdom$CPI_2015, start=c(1960,1), freq=1)
+tsGDP<-ts(TimeSeriesUnitedKingdom$GDP_2015, start=c(1960,1), freq=1)
+
+
+```
+
+Create plots of the timeseries
+
+```{r Plots}
+
+plot.ts(tsUR)
+plot.ts(tsIF)
+
+plot.ts(tsGDP)
+```
+
+
+
+Test for stationarity
+
+Apply the ADF test to test the null that a unit root exists. If the null hypothesis is rejected, then conclude that there is no unit root (stationarity), otherwise the result of the procedure is not informative since none of the tests rejected the corresponding null hypothesis. In that case it may be more cautions to consider the existence of a unit root and detrend the series by taking first differences.
+
+```{r ADF_Test}
+adf.test(tsGDP)
+adf.test(tsIF)
+adf.test(tsUR)
+
+```
+
+The KPSS tests the null that the series is stationary or stationary around a trend. If the null is rejected (at a predetermined level of significance) conclude that the trend is stochastic, 
+
+```{r kpss_test}
+kpss.test(tsGDP, null = "Trend")
+kpss.test(tsIF, null = "Trend")
+kpss.test(tsUR, null = "Trend")
+```
+Check the correlograms 
+
+If we have a random series of observations that are independent of one another, then the population serial correlations will all be zero. However, in this case, we would not expect the sample serial correlations to be exactly zero. The sample serial correlations should be close to zero in value on average. In addition, if the sample size is fairly large (say if it is greater than or equal to 40) $r_k$ is approximately normally distributed. As a result, we can calculate the confidence limits of the sample serial correlation and therefore determine whether or not it is significantly nonzero. If we are observing twenty serial correlations say of a random process, then we would expect to see one of the $r_k$ fall outside of the 1.96 (z-score) conﬁdence limit by chance alone. This information can be presented visually on a correlogram. 
+
+
+
+```{r correlograms}
+
+acf(tsUR)
+acf(tsIF)
+acf(tsGDP)
+
+pacf(tsUR)
+pacf(tsIF)
+pacf(tsGDP)
+```
+Differencing
+
+```{r Differencing}
+
+URdiff=diff(tsUR)
+URDiff2=diff(tsUR, differences=1)
+GDPdiff=diff(tsGDP)
+GDPDiff2=diff(tsGDP, differences=1)
+InflDiff1=diff(tsIF)
+InflDiff2=diff(tsIF, differences=1)
+
+
+
+```
+
+Ljung - Box Test
+
+The test determines whether or not errors are iid (i.e. white noise) or whether there is something more behind them; whether or not the autocorrelations for the errors or residuals are non zero. Essentially, it is a test of lack of fit: if the autocorrelations of the residuals are very small, we say that the model doesn’t show ‘significant lack of fit’.
+
+The null hypothesis of the Box Ljung Test, H0, is that our model does not show lack of fit (or in simple terms—the model is just fine). The alternate hypothesis, Ha, is just that the model does show a lack of fit.
+
+A significant p-value in this test rejects the null hypothesis that the time series isn’t autocorrelated.
+
+```{r Box_Ljung_Test}
+
+Box.test(tsUR, lag = 2, type = c("Ljung-Box"), fitdf = 0)
+Box.test(tsIF, lag = 2, type = c("Ljung-Box"), fitdf = 0)
+Box.test(tsGDP, lag = 2, type = c("Ljung-Box"), fitdf = 0)
+
+
+```
+
+ARIMA
+
+```{r ARIMA}
+Unemployment
+
+UmData<-Arima(tsUR, order = c(1, 0, 0),
+              include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+              method = "ML")
+
+UmData
+#sigma^2 estimated as 0.7749:  log likelihood=-81.54
+#AIC=169.09   AICc=169.49   BIC=175.51
+
+UmData2<-Arima(tsUR, order = c(1, 1, 0),
+              include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+              method = "ML")
+
+UmData2
+#Coefficients:
+#         ar1   drift
+#      0.5212  0.0734
+#s.e.  0.1064  0.1933
+#
+#sigma^2 estimated as 0.5679:  log likelihood=-69.58
+#AIC=145.15   AICc=145.56   BIC=151.53
+
+UmData3<-Arima(tsUR, order = c(2, 1, 0),
+              include.mean = FALSE, include.drift = TRUE, include.constant =TRUE,
+              method = "ML")
+
+UmData4<-Arima(tsUR, order = c(3, 1, 0),
+              include.mean = FALSE, include.drift = TRUE, include.constant =TRUE,
+              method = "ML")
+
+UmData
+
+UmData2
+
+UmData3
+
+UmData4
+
+
+UmData5<-Arima(tsUR, order = c(2, 1, 1),
+              include.mean = FALSE, include.drift = TRUE, include.constant =TRUE,
+              method = "ML")
+
+UmData3
+
+UmData5
+
+InfData<-Arima(InflDiff2, order = c(1, 0, 3),
+               include.mean = FALSE, include.drift = FALSE, include.constant =FALSE,
+               method = "ML")
+
+GDPData<-Arima(GDPdiff, order = c(2, 0, 1),
+              include.mean = FALSE, include.drift = FALSE, include.constant =FALSE,
+              method = "ML")
+
+GDPData2<-Arima(tsGDP, order = c(2, 0, 1),
+      include.mean = FALSE, include.drift = TRUE, include.constant =TRUE,
+      method = "ML")
+
+```
+
+
+Forecasting
+
+```{r Forecasting}
+plot(forecast(UmData3,h=3))
+plot(forecast(InfData,h=3))
+plot(forecast(GDPData,h=3))
+plot(forecast(GDPData,h=100))
+plot(forecast(GDPData2,h=3))
+plot(forecast(GDPData2,h=100))
+```
+

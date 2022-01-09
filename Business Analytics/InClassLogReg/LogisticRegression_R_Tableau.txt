@@ -1,0 +1,24 @@
+R Script
+
+train <- read.table("#location of datset#\\TrainingData.csv", sep=",", header=T)
+model <- glm(LastYear ~ Year1 + Year2 + Year3 + Year4 + Year5, data = train, family=binomial)
+test <- read.table("#location of datset#\\TestData.csv", sep=",", header=T)
+test$pred <-predict(model, newdata = test, type = "response")
+summary(model)
+
+For Tableau Calculated Field
+
+SCRIPT_REAL(
+'train <- read.table("#location of datset#\\TrainingData.csv", sep=",", header=T)
+model <- glm(.arg1 ~ .arg2 + .arg3 + .arg4 + .arg5 + .arg6, data = train, family=binomial)
+test <- read.table("#location of datset#\\TestData.csv", sep=",", header=T)
+     
+result <- predict(model, newdata = test, type="response")',
+
+SUM([Last Year]), SUM([Year1]), SUM([Year2]), SUM([Year3]), SUM([Year4]), SUM([Year5])
+)
+
+
+
+
+

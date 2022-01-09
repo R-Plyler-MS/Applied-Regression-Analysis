@@ -1,0 +1,192 @@
+---
+title: "MSBA Group1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("C:/Users/randa/Dropbox/Masters/Autumn/TBANLT 540 Applied Regression Analysis/MSBA Final"))
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r, fig.width=10,fig.height=11}
+#install.packages("ggplot2")
+
+library(readr)
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(tidyverse)
+library(plyr)
+library(ggplot2)
+
+Annual_Salary_2010_thru_2013 <- read_csv("Annual_Salary_2010_thru_2013.csv")
+Annual_Salary_2010_thru_2013_long_Clean <- read.csv("Annual_Salary_2010_thru_2013_long_Clean.csv")
+
+Annual_Salary_2010_thru_2013_long <- Annual_Salary_2010_thru_2013 %>%
+  pivot_longer(
+    starts_with("Salary"), 
+    names_to = "Year", 
+    values_to = "Salary"
+    ) 
+
+Annual_Salary_2010_thru_2013_long_Clean <- Annual_Salary_2010_thru_2013_long %>%
+  select(AgencyTitle,EmployeeName,JobTitle,Year,Salary) %>% mutate(Year=substring(Year,7,11))
+
+CategoricalDataVar1 <- Annual_Salary_2010_thru_2013_long_Clean %>% select(AgencyTitle,EmployeeName,JobTitle,Year,Salary)
+show(CategoricalDataVar1)
+
+CategoricalDataVar2<-CategoricalDataVar1[!(CategoricalDataVar1$Salary=="0"),]
+
+CategoricalDataVar3<-CategoricalDataVar2 %>% select(AgencyTitle, EmployeeName, JobTitle, Year, Salary)
+
+show(CategoricalDataVar3)
+#write.csv(x=CategoricalDataVar3,file="CategoricalDataVar2.csv")
+
+#create factor variable and add to CatDataVar3 (in theory create another row of same thing)
+CategoricalDataVar3$CongressionalDistrict<-factor(CategoricalDataVar3$AgencyTitle)
+CountAgencyVar <- as.data.frame(table(CategoricalDataVar3$AgencyTitle))
+
+#run to redo
+CategoricalDataVar4<-CategoricalDataVar3
+
+#replace items in data frame
+CategoricalDataVar5<-CategoricalDataVar4[(CategoricalDataVar4$CongressionalDistrict=="Bates Technical College" | CategoricalDataVar4$CongressionalDistrict=="Bellevue Community College" | CategoricalDataVar4$CongressionalDistrict=="Bellingham Technical College" | CategoricalDataVar4$CongressionalDistrict=="Big Bend Community College" | CategoricalDataVar4$CongressionalDistrict=="Cascadia Community College" | CategoricalDataVar4$CongressionalDistrict=="Central Washington University" | CategoricalDataVar4$CongressionalDistrict=="Centralia College" | CategoricalDataVar4$CongressionalDistrict=="Clark College" | CategoricalDataVar4$CongressionalDistrict=="Clover Park Technical College" | CategoricalDataVar4$CongressionalDistrict=="Columbia Basin Community College" | CategoricalDataVar4$CongressionalDistrict=="Eastern Washington University" | CategoricalDataVar4$CongressionalDistrict=="Edmonds Community College" | CategoricalDataVar4$CongressionalDistrict=="Everett Community College" | CategoricalDataVar4$CongressionalDistrict=="Grays Harbor College" | CategoricalDataVar4$CongressionalDistrict=="Green River Community College" | CategoricalDataVar4$CongressionalDistrict=="Highline Community College" | CategoricalDataVar4$CongressionalDistrict=="Lake Washington Technical College" | CategoricalDataVar4$CongressionalDistrict=="Lower Columbia Community College" | CategoricalDataVar4$CongressionalDistrict=="Olympic College" | CategoricalDataVar4$CongressionalDistrict=="Peninsula Community College" | CategoricalDataVar4$CongressionalDistrict=="Pierce Community College" | CategoricalDataVar4$CongressionalDistrict=="Renton Technical College" | CategoricalDataVar4$CongressionalDistrict=="Seattle Community College" | CategoricalDataVar4$CongressionalDistrict=="Shoreline Community College" | CategoricalDataVar4$CongressionalDistrict=="Skagit Valley College" | CategoricalDataVar4$CongressionalDistrict=="South Puget Sound Community College" | CategoricalDataVar4$CongressionalDistrict=="Spokane Community College" | CategoricalDataVar4$CongressionalDistrict=="Tacoma Community College" | CategoricalDataVar4$CongressionalDistrict=="The Evergreen State College" | CategoricalDataVar4$CongressionalDistrict=="University of Washington" | CategoricalDataVar4$CongressionalDistrict=="Walla Walla Community College" | CategoricalDataVar4$CongressionalDistrict=="Washington State University" | CategoricalDataVar4$CongressionalDistrict=="Wenatchee Valley College" | CategoricalDataVar4$CongressionalDistrict=="Western Washington University" | CategoricalDataVar4$CongressionalDistrict=="Whatcom Community College" | CategoricalDataVar4$CongressionalDistrict=="Yakima Valley College"),]
+
+CategoricalDataVarSubUWWSU<-CategoricalDataVar4[(CategoricalDataVar4$CongressionalDistrict=="Bates Technical College" | CategoricalDataVar4$CongressionalDistrict=="Bellevue Community College" | CategoricalDataVar4$CongressionalDistrict=="Bellingham Technical College" | CategoricalDataVar4$CongressionalDistrict=="Big Bend Community College" | CategoricalDataVar4$CongressionalDistrict=="Cascadia Community College" | CategoricalDataVar4$CongressionalDistrict=="Central Washington University" | CategoricalDataVar4$CongressionalDistrict=="Centralia College" | CategoricalDataVar4$CongressionalDistrict=="Clark College" | CategoricalDataVar4$CongressionalDistrict=="Clover Park Technical College" | CategoricalDataVar4$CongressionalDistrict=="Columbia Basin Community College" | CategoricalDataVar4$CongressionalDistrict=="Eastern Washington University" | CategoricalDataVar4$CongressionalDistrict=="Edmonds Community College" | CategoricalDataVar4$CongressionalDistrict=="Everett Community College" | CategoricalDataVar4$CongressionalDistrict=="Grays Harbor College" | CategoricalDataVar4$CongressionalDistrict=="Green River Community College" | CategoricalDataVar4$CongressionalDistrict=="Highline Community College" | CategoricalDataVar4$CongressionalDistrict=="Lake Washington Technical College" | CategoricalDataVar4$CongressionalDistrict=="Lower Columbia Community College" | CategoricalDataVar4$CongressionalDistrict=="Olympic College" | CategoricalDataVar4$CongressionalDistrict=="Peninsula Community College" | CategoricalDataVar4$CongressionalDistrict=="Pierce Community College" | CategoricalDataVar4$CongressionalDistrict=="Renton Technical College" | CategoricalDataVar4$CongressionalDistrict=="Seattle Community College" | CategoricalDataVar4$CongressionalDistrict=="Shoreline Community College" | CategoricalDataVar4$CongressionalDistrict=="Skagit Valley College" | CategoricalDataVar4$CongressionalDistrict=="South Puget Sound Community College" | CategoricalDataVar4$CongressionalDistrict=="Spokane Community College" | CategoricalDataVar4$CongressionalDistrict=="Tacoma Community College" | CategoricalDataVar4$CongressionalDistrict=="The Evergreen State College" |  CategoricalDataVar4$CongressionalDistrict=="Walla Walla Community College" |  CategoricalDataVar4$CongressionalDistrict=="Wenatchee Valley College" | CategoricalDataVar4$CongressionalDistrict=="Western Washington University" | CategoricalDataVar4$CongressionalDistrict=="Whatcom Community College" | CategoricalDataVar4$CongressionalDistrict=="Yakima Valley College"),]
+
+#Recode/Rename Congressional Districts
+
+CategoricalDataVar5$CongressionalDistrict <- recode(CategoricalDataVar5$CongressionalDistrict, 
+  "Bates Technical College" = "Congressional District 6",
+  "Bellevue Community College" = "Congressional District 9",
+  "Bellingham Technical College" = "Congressional District 2",
+  "Big Bend Community College" = "Congressional District 4",
+  "Cascadia Community College" = "Congressional District 1",
+  "Central Washington University" = "Congressional District 8",
+  "Centralia College" = "Congressional District 3",
+  "Clark College" = "Congressional District 3",
+  "Clover Park Technical College" = "Congressional District 10",
+  "Columbia Basin Community College" = "Congressional District 4",
+  "Eastern Washington University" = "Congressional District 5",
+  "Edmonds Community College" = "Congressional District 2",
+  "Everett Community College" = "Congressional District 2",
+  "Grays Harbor College" = "Congressional District 6",
+  "Green River Community College" = "Congressional District 8",
+  "Highline Community College" = "Congressional District 9",
+  "Lake Washington Technical College" = "Congressional District 1",
+  "Lower Columbia Community College" = "Congressional District 3",
+  "Olympic College" = "Congressional District 6",
+  "Peninsula Community College" = "Congressional District 6",
+  "Pierce Community College" = "Congressional District 10",
+  "Renton Technical College" = "Congressional District 9",
+  "Seattle Community College" = "Congressional District 7",
+  "Shoreline Community College" = "Congressional District 7",
+  "Skagit Valley College" = "Congressional District 1",
+  "South Puget Sound Community College" = "Congressional District 10",
+  "Spokane Community College" = "Congressional District 5",
+  "Tacoma Community College" = "Congressional District 6",
+  "The Evergreen State College" = "Congressional District 10",
+  "University of Washington" = "Congressional District 7",
+  "Walla Walla Community College" = "Congressional District 5",
+  "Washington State University" = "Congressional District 5",
+  "Wenatchee Valley College" = "Congressional District 8",
+  "Western Washington University" = "Congressional District 2",
+  "Whatcom Community College" = "Congressional District 2",
+  "Yakima Valley College" = "Congressional District 4"
+)
+
+#create data frame
+df2 <- data.frame(
+  AgencyTitle = c(CategoricalDataVar5$AgencyTitle),
+  EmployeeName = c(CategoricalDataVar5$EmployeeName),
+  JobTitle = c(CategoricalDataVar5$JobTitle),
+  Year = c(CategoricalDataVar5$Year),
+  Salary = c(CategoricalDataVar5$Salary),
+  CongressionalDistrict = c(CategoricalDataVar5$CongressionalDistrict),
+  stringsAsFactors = FALSE
+)
+
+
+
+dfA <- data.frame(
+  AgencyTitle = c(CategoricalDataVarSubUWWSU$AgencyTitle),
+  EmployeeName = c(CategoricalDataVarSubUWWSU$EmployeeName),
+  JobTitle = c(CategoricalDataVarSubUWWSU$JobTitle),
+  Year = c(CategoricalDataVarSubUWWSU$Year),
+  Salary = c(CategoricalDataVarSubUWWSU$Salary),
+  CongressionalDistrict = c(CategoricalDataVarSubUWWSU$CongressionalDistrict),
+  stringsAsFactors = FALSE
+)
+
+#creating a GGPLOT for visualization with Agency Title and Salary. Note this is preliminary and does not include congressional districts.
+ggP2 <- ggplot(df2, aes(x=AgencyTitle, y=Salary, colour=AgencyTitle)) + geom_point() + guides(fill=guide_legend(title=NULL + theme(axis.line = element_line(colour="black")) + xlim(0, 3000000) + theme(aspect.ratio = 2)))
+ggP2 + scale_fill_discrete(guide=FALSE) + stat_smooth(method=loess, colour="black") +
+ theme(legend.position="none") + theme(axis.text.x = element_text(angle=60, hjust=1),
+ panel.grid.major.y = element_blank(),
+ panel.grid.minor.y = element_blank(),
+ panel.grid.major.x = element_line(colour="grey60", linetype="dashed"))
+
+ggP3 <- ggplot(dfA, aes(x=AgencyTitle, y=Salary, colour=AgencyTitle)) + geom_point() + guides(fill=guide_legend(title=NULL + theme(axis.line = element_line(colour="black")) + xlim(0, 3000000) + theme(aspect.ratio = 2)))
+ggP3 + scale_fill_discrete(guide=FALSE) + stat_smooth(method=loess, colour="black") +
+ theme(legend.position="none") + theme(axis.text.x = element_text(angle=60, hjust=1),
+ panel.grid.major.y = element_blank(),
+ panel.grid.minor.y = element_blank(),
+ panel.grid.major.x = element_line(colour="grey60", linetype="dashed"))
+
+#run to redo
+CategoricalDataVar6<-CategoricalDataVar5
+df3<-df2
+
+#create categorical variable
+df3$FactorVariable<-factor(df2$CongressionalDistrict)
+summary(df3)
+DistCong <- as.data.frame(table(df3$FactorVariable))
+
+#create ggplot w/ congressional districts as plot
+ggP4 <- ggplot(df3, aes(x=FactorVariable, y=Salary, colour=AgencyTitle)) + geom_point() + guides(fill=guide_legend(title=NULL + theme(axis.line = element_line(colour="black")) + xlim(0, 3000000) + theme(aspect.ratio = 2)))
+ggP4 + scale_fill_discrete(guide=FALSE) + stat_smooth(method=loess, colour="black") + scale_x_discrete(name = "Congressional Districts") +
+ theme(legend.position="none") + theme(axis.text.x = element_text(hjust=1),
+ panel.grid.major.y = element_blank(),
+ panel.grid.minor.y = element_blank(),
+ panel.grid.major.x = element_line(colour="grey60", linetype="dashed"))
+
+
+
+
+#Enforce ordering
+df3$FactorVariable<-factor(df3$FactorVariable,levels=c('Congressional District 7', 'Congressional District 5', 'Congressional District 2', 'Congressional District 8', 'Congressional District 10', 'Congressional District 9', 'Congressional District 6', 'Congressional District 3', 'Congressional District 4', 'Congressional District 1'))
+
+#year into date
+df3$Year <- as.Date(df3$Year, format="%Y")
+
+#write.csv(x=df3,file="df3.csv")
+
+#First LM Model
+LMModel1<-lm(Salary~ FactorVariable + Year + AgencyTitle , data=df3)
+
+view(df3)
+summary(LMModel1)
+summary(df3$Year)
+
+
+
+```
+
+
+
+
+
+
+```{r}
+
+summary(df3$Year)
+
+
+```
+
+

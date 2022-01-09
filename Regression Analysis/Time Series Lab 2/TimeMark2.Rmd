@@ -1,0 +1,219 @@
+---
+title: "Time Series Lab 2"
+author: "Margo Bergman"
+date: "11/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("C:/Users/margo/Dropbox/My PC (JULENE)/Documents/UWTacoma/TBANLT540/Data"))
+```
+
+
+Library Packages
+
+```{r library}
+
+library(tidyverse)
+library(readxl)
+library(corrgram)
+library(tseries)
+library(forecast)
+```
+
+
+```{r }
+RainSeattleAll <- read_csv("RainSeattleAll2b.csv")
+
+```
+
+```{r data structure}
+dim(RainSeattleAll)    #returns the dimensions of an object
+str(RainSeattleAll)
+sum(is.na(RainSeattleAll)) #returns how many observations have "na"
+
+```
+
+
+```{r}
+RainSeattleAll$SNOW <- as.character(as.logical(RainSeattleAll$SNOW))
+RainSeattleAll$ACMH <- as.character(as.logical(RainSeattleAll$ACMH))
+RainSeattleAll$ACSH <- as.character(as.logical(RainSeattleAll$ACSH))
+RainSeattleAll$WDFG <- as.character(as.logical(RainSeattleAll$WDFG))
+RainSeattleAll$WDFM <- as.character(as.logical(RainSeattleAll$WDFM))
+RainSeattleAll$WSF1 <- as.character(as.logical(RainSeattleAll$WSF1))
+RainSeattleAll$WSFG <- as.character(as.logical(RainSeattleAll$WSFG))
+RainSeattleAll$WSFM <- as.character(as.logical(RainSeattleAll$WSFM))
+RainSeattleAll$WT07 <- as.character(as.logical(RainSeattleAll$WT07))
+RainSeattleAll$WT09 <- as.character(as.logical(RainSeattleAll$WT09))
+RainSeattleAll$WT11 <- as.character(as.logical(RainSeattleAll$WT11))
+RainSeattleAll$WT15 <- as.character(as.logical(RainSeattleAll$WT15))
+RainSeattleAll$WV01 <- as.character(as.logical(RainSeattleAll$WV01))
+RainSeattleAll$WV20 <- as.character(as.logical(RainSeattleAll$WV20))
+
+
+RainSeattleAll$SNOW [is.na(RainSeattleAll$SNOW )] <- '0' 
+RainSeattleAll$ACMH [is.na(RainSeattleAll$ACMH )] <- '0' 
+RainSeattleAll$ACSH [is.na(RainSeattleAll$ACSH )] <- '0' 
+RainSeattleAll$WDFG [is.na(RainSeattleAll$WDFG )] <- '0' 
+RainSeattleAll$WDFM [is.na(RainSeattleAll$WDFM )] <- '0' 
+RainSeattleAll$WSF1 [is.na(RainSeattleAll$WSF1 )] <- '0' 
+RainSeattleAll$WSFG [is.na(RainSeattleAll$WSFG )] <- '0' 
+RainSeattleAll$WSFM [is.na(RainSeattleAll$WSFM )] <- '0' 
+RainSeattleAll$WT07 [is.na(RainSeattleAll$WT07 )] <- '0' 
+RainSeattleAll$WT09 [is.na(RainSeattleAll$WT09 )] <- '0' 
+RainSeattleAll$WT11 [is.na(RainSeattleAll$WT11 )] <- '0' 
+RainSeattleAll$WT15 [is.na(RainSeattleAll$WT15 )] <- '0' 
+RainSeattleAll$WV01 [is.na(RainSeattleAll$WV01 )] <- '0' 
+RainSeattleAll$WV20 [is.na(RainSeattleAll$WV20 )] <- '0' 
+
+
+
+sum(is.na(RainSeattleAll))
+
+RainSeattleAll[is.na(RainSeattleAll)] <- 0 #replaces "na" with 0. This is a choice, statistically, but you can't run the regression without it
+
+sum(is.na(RainSeattleAll))
+
+
+```
+
+Create a time series dataset for decomposition
+
+```{r time_series_creation}
+
+RainSeattleAll$DATE<-as.POSIXct(RainSeattleAll$DATE, format="%m/%d/%Y")
+RainSeattleAll$PRCP<-as.numeric(RainSeattleAll$PRCP)
+
+MonthlyRain<-aggregate(list(rain = RainSeattleAll$PRCP), 
+          list(month = cut(RainSeattleAll$DATE, "month")), 
+          mean)
+MonthlyRain
+
+MonthlyRain2<-ts(MonthlyRain$rain, frequency = 12, start = c(1996,11))
+MonthlyRain2
+
+Rain<-ts(RainSeattleAll$PRCP, frequency = 365, start = c(1996,11))
+
+```
+
+
+Create a plot of the time series
+
+
+```{r plots}
+plot.ts(Rain)
+plot.ts(MonthlyRain2)
+
+```
+
+
+Identify the trend/season/random components
+
+```{r decomposition}
+RainParts<-decompose(Rain)
+RainMonthParts<-decompose(MonthlyRain2)
+plot(RainParts)
+plot(RainMonthParts)
+```
+
+Modeling using exponential smoothing - Full data
+
+```{r HoltWintersFull}
+RainModel1<-HoltWinters(Rain)
+RainModel1
+RainModel1$SSE
+plot(RainModel1, col=4, col.predicted=6)
+residualsHolt1<-residuals(RainModel1)
+plot(residualsHolt1)
+acf(residualsHolt1)
+pacf(residualsHolt1)
+```
+
+Modeling using exponential smoothing - Monthly data
+
+```{r HoltWintersMonthly}
+RainModel2<-HoltWinters(MonthlyRain2)
+RainModel2
+RainModel2$SSE
+plot(RainModel2, col=4, col.predicted=6)
+residualsHolt2<-residuals(RainModel2)
+plot(residualsHolt2)
+acf(residualsHolt2)
+pacf(residualsHolt2)
+```
+
+
+Forecasting using exponential smoothing - Full Data
+
+```{r HWForecastFull}
+RainForecast<-forecast(Rain, h=400)
+plot(RainForecast)
+```
+
+Forecasting using exponential smoothing - Monthly Data
+
+```{r HWForecastFull}
+RainForecast2<-forecast(MonthlyRain2, h=13)
+plot(RainForecast2)
+```
+
+Modeling using an auto.arima model - Full Data 
+
+```{r AutoArimaFull}
+par(mfrow=c(1,2))
+acf(Rain)
+pacf(Rain)
+
+
+RainArima<-auto.arima(Rain, seasonal = TRUE)
+RainArima
+acf(ts(RainArima$residuals), main='ACF Residual - Full')
+pacf(ts(RainArima$residuals), main='PACF Residual - Full')
+
+
+```
+
+
+Modeling using an auto.arima model - Monthly Data 
+
+```{r AutoArimaMonthly}
+acf(MonthlyRain2)
+pacf(MonthlyRain2)
+
+RainArima2<-auto.arima(MonthlyRain2, seasonal = TRUE)
+RainArima2
+
+acf(ts(RainArima2$residuals), main='ACF Residual - Monthly')
+pacf(ts(RainArima2$residuals), main='PACF Residual- Monthly')
+
+```
+
+
+```{r predictions}
+RainArima3<-Arima(MonthlyRain2, order = c(5, 1, 0), seasonal = c(5, 0, 0),
+                       include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+                       method = "ML")
+
+RainArima4<-Arima(MonthlyRain2, order = c(5, 1, 0), seasonal = c(4, 0, 0),
+                  include.mean = FALSE, include.drift = FALSE, include.constant =TRUE,
+                  method = "ML")
+RainArima4
+
+
+
+prediction1=predict(RainArima,n.ahead=10)
+prediction1
+plot(forecast(RainArima,h=100))
+
+prediction2=predict(RainArima2,n.ahead=10)
+prediction2
+plot(forecast(RainArima2,h=100))
+
+
+
+
+```
+
+
