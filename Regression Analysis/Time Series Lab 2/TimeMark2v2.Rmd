@@ -1,6 +1,6 @@
 ---
 title: "Time Series Lab 2"
-author: "Margo Bergman"
+author: "Randall Plyler"
 date: "11/20/2020"
 output: html_document
 ---
